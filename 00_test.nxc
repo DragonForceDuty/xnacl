@@ -1,4 +1,3 @@
-
 task main()
 {
  SetSensorMode(IN_1, SENSOR_MODE_RAW);
