@@ -1,0 +1,20 @@
+
+task main()
+{
+ SetSensorMode(IN_1, SENSOR_MODE_RAW);
+ OnRev(OUT_AC, 75);
+ while (true)
+ {
+     if (SENSOR_1 <= 600)
+     {
+       OnRev(OUT_AC, 50);
+       if (SENSOR_1  > 600)
+          {
+          OnFwd(OUT_AC, 75); Wait(500);
+          OnRev(OUT_C, 75);
+          OnFwd(OUT_A, 100); Wait(5000);
+          OnRev(OUT_AC, 75);
+          }
+     }
+ }
+}
