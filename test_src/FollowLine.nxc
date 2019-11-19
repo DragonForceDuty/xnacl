@@ -1,0 +1,31 @@
+task goLeft(){
+OnFwd(OUT_A,50);
+OnFwd(OUT_C,20);
+Wait(500);
+Off(OUT_AC);
+}
+task goRight(){
+OnFwd(OUT_C,50);
+OnFwd(OUT_A,20);
+Wait(500);
+Off(OUT_AC);
+}
+task main()
+{
+int lightratio = 500;
+SetSensorType(S1, SENSOR_TYPE_LIGHT_ACTIVE);
+SetSensorMode(S1, SENSOR_MODE_RAW);
+SetSensorType(S2, SENSOR_TYPE_LIGHT_ACTIVE);
+SetSensorMode(S2, SENSOR_MODE_RAW);
+while(1){
+    int varleft = SensorValue(S1);
+    int varright = SensorValue(S2);
+    OnFwd(OUT_AC,50);
+    if (varleft > lightratio){
+        start goRight;
+    }
+    if (varright > lightratio){
+        start goLeft;
+    }
+}
+}
