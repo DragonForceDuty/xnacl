@@ -1,9 +1,9 @@
 task main(){
-int Kp = 100;
-int Ki = 0;
-int Kd = 0;
+int Kp = 1000;
+int Ki = 100;
+int Kd = 1000;
 int offset = 30;
-int Tp = 25;
+int Tp = 50;
 int integral = 0;
 int lastError = 0;
 int derivative = 0;
@@ -11,7 +11,7 @@ int near = 20;
 SetSensorType(S1, SENSOR_TYPE_LIGHT_ACTIVE);
 SetSensorMode(S1, SENSOR_MODE_PERCENT);
 SetSensorLowspeed(S4);
-while(true){
+repeat(10000){
     if(SensorUS(S4) < near){
         if (Sensor(S1) < offset){
             OnFwd(OUT_AC,50);
@@ -26,7 +26,7 @@ while(true){
     }
     int LightValue = SensorValue(S1);
     int error = LightValue - offset;
-    integral = (2/3) * integral + error;
+    integral = integral + error;
     derivative = error - lastError;
     int Turn = ((Kp * error) + (Ki * integral) + (Kd * derivative)) / 100;
     int powerA = Tp + Turn;
