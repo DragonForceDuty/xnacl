@@ -1,0 +1,33 @@
+#define NEAR 20 //cm
+#define THRESHOLD 0 //Richtige Variable einfügen
+
+task main()
+{
+    SetSensorLowspeed(IN_4);
+    SetSensorLight(IN_1);
+    SetSensorLight(IN_2);
+    while(true)
+    {
+        OnRev(OUT_AC,70);
+        while(SensorUS(IN_4)<NEAR)
+        {
+            if (Sensor(IN_1)>THRESHOLD && Sensor(IN_2)>THRESHOLD)
+            // Bei einer Wand
+            {
+                Off(OUT_AC);
+                OnFwd(OUT_AC,50);
+                Wait(1000);
+                OnFwd(OUT_A,60);
+                OnRev(OUT_C,30);
+                Wait(7000);
+            }
+            else
+            //Bei der Schranke
+            {
+                Off(OUT_AC);
+                Wait(50000);
+            }
+        }
+    }
+}
+
