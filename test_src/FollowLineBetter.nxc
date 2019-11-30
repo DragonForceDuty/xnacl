@@ -1,0 +1,50 @@
+task main(){
+Kp = 2000;
+Ki = 0;
+Kd = 0;
+offset = 450;
+Tp = 25;
+integral = 0;
+lastError = 0;
+derivative = 0;
+SetSensorType(S1, SENSOR_TYPE_LIGHT_ACTIVE);
+SetSensorMode(S1, SENSOR_MODE_RAW);
+near = 20;
+while(true){
+    if(SensorUS(IN_4) < near){
+        if (Sensor(IN_1) > offset){
+            OnFwd(OUT_AC,50);
+            Wait(1000);
+            OnFwd(OUT_A,60);
+            OnRev(OUT_C,30);
+            Wait(7000);
+        }
+        else{
+            Off(OUT_AC);
+            Wait(50000);
+        }
+    }
+    LightValue = SensorValue(S1);
+    error = LightValue - offset;
+    integral = (2/3) * integral + error;
+    derivative = error - lastError;
+    Turn = ((Kp * error) + (Ki * integral) + (Kd * derivative)) / 100;
+    powerA = Tp + Turn;
+    powerC = Tp * Turn;
+    lastError = error;
+    if (powerA > 0){
+        OnFwd(OUT_A,powerA);
+    }
+    else{
+        powerA = powerA * (-1)
+        OnRev(OUT_A,powerA);
+    }
+    if (powerC > 0){
+        OnFwd(OUT_C,powerC);
+    }
+    else{
+        powerC = powerC * (-1)
+        OnRev(OUT_C,powerC);
+    }
+}
+}
