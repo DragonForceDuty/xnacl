@@ -1,9 +1,9 @@
 task main(){
-int Kp = 1000;
-int Ki = 100;
-int Kd = 1000;
-int offset = 30;
-int Tp = 50;
+int Kp = 1030;
+int Ki = 0;
+int Kd = 0;
+int offset = 34;
+int Tp = 30;
 int integral = 0;
 int lastError = 0;
 int derivative = 0;
@@ -11,7 +11,7 @@ int near = 20;
 SetSensorType(S1, SENSOR_TYPE_LIGHT_ACTIVE);
 SetSensorMode(S1, SENSOR_MODE_PERCENT);
 SetSensorLowspeed(S4);
-repeat(10000){
+while(true){
     if(SensorUS(S4) < near){
         if (Sensor(S1) < offset){
             OnFwd(OUT_AC,50);
