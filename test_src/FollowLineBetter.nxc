@@ -1,9 +1,9 @@
 task main(){
-int Kp = 1030;
-int Ki = 0;
-int Kd = 0;
+int Kp = 950;
+int Ki = 150;
+int Kd = 800;
 int offset = 34;
-int Tp = 30;
+int Tp = 50;
 int integral = 0;
 int lastError = 0;
 int derivative = 0;
@@ -26,6 +26,12 @@ while(true){
     }
     int LightValue = SensorValue(S1);
     int error = LightValue - offset;
+    if (error < -5) {
+        error = -5
+    }
+    if (error > 5) {
+        error = 5
+    }
     integral = integral + error;
     derivative = error - lastError;
     int Turn = ((Kp * error) + (Ki * integral) + (Kd * derivative)) / 100;
