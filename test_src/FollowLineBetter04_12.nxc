@@ -1,0 +1,63 @@
+task main(){
+int Kp = 900;
+int Ki = 0;
+int Kd = 0;
+int offset = 32;
+int Tp = 50;
+int integral1 = 0;
+int integral2 = 0;
+int lastError1 = 0;
+int lastError2 = 0;
+int derivative1 = 0;
+int derivative2 = 0;
+int near = 20;
+SetSensorType(S1, SENSOR_TYPE_LIGHT_ACTIVE);
+SetSensorMode(S1, SENSOR_MODE_PERCENT);
+SetSensorType(S2, SENSOR_TYPE_LIGHT_ACTIVE);
+SetSensorMode(S2, SENSOR_MODE_PERCENT);
+SetSensorLowspeed(S4);
+//Eventuell soll er zu Beginn offset ausrechnen
+while(true){
+    if(SensorUS(S4) < near){
+        if (Sensor(S1) < offset){
+            OnFwd(OUT_AC,50);
+            Wait(2000);
+            OnFwd(OUT_A,60);
+            OnRev(OUT_C,30);
+            Wait(1500);
+        }
+        else{
+            Off(OUT_AC);
+        }
+    }
+    int LightValue1 = SensorValue(S1);
+    int LightValue2 = SensorValue(S2);
+    int error1 = LightValue1 - offset;
+    int error2 = LightValue2 - offset;
+    integral1 =(2/3)*integral1 + error1;
+    integral2 =(2/3)*integral2 + error2;
+    derivative1 = error1 - lastError1;
+    derivative2 = error2 - lastError2;
+    int Turn1 = ((Kp * error1) + (Ki * integral1) + (Kd * derivative1)) / 100;
+    int Turn2 = ((Kp * error2) + (Ki * integral2) + (Kd * derivative2)) / 100;
+    int powerA = Tp + Turn1;
+    int powerC = Tp + Turn2;
+    lastError1 = error1;
+    lastError2 = error2;
+    if(powerA > 0 && powerC > 0){
+        OnRev(OUT_AC, Tp);
+    }
+    else if(powerA <= 0){
+        Off(OUT_A);
+        OnRev(OUT_C, powerA);
+    }
+    else if(powerC <= 0){
+        Off(OUT_C);
+        OnRev(OUT_A, powerC);
+    }
+
+
+
+}
+}
+
