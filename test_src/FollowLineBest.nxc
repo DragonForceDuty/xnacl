@@ -13,11 +13,15 @@ int derivative2 = 0;
 int near = 25;
 SetSensorType(S1, SENSOR_TYPE_LIGHT_ACTIVE);
 SetSensorMode(S1, SENSOR_MODE_PERCENT);
+//Lichtsensor links
 SetSensorType(S2, SENSOR_TYPE_LIGHT_ACTIVE);
 SetSensorMode(S2, SENSOR_MODE_PERCENT);
+//Lichtsensor rechts
 SetSensorType(S3, SENSOR_TYPE_LIGHT_ACTIVE);
 SetSensorMode(S3, SENSOR_MODE_PERCENT);
+//Lichtsensor mitte, für Barcode
 SetSensorLowspeed(S4);
+//Ultraschallsensor
 
 offset = (SensorValue(S1) + SensorValue(S2))/2;
 Wait(500);
