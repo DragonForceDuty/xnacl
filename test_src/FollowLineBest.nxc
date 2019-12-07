@@ -1,16 +1,16 @@
 task main(){
-int Kp = 900;
+int Kp = 930;
 int Ki = 0;
 int Kd = 0;
 int offset;
-int Tp = 50;
+int Tp = 60;
 int integral1 = 0;
 int integral2 = 0;
 int lastError1 = 0;
 int lastError2 = 0;
 int derivative1 = 0;
 int derivative2 = 0;
-int near = 25;
+int near = 10;
 SetSensorType(S1, SENSOR_TYPE_LIGHT_ACTIVE);
 SetSensorMode(S1, SENSOR_MODE_PERCENT);
 //Lichtsensor links
@@ -23,7 +23,7 @@ SetSensorMode(S3, SENSOR_MODE_PERCENT);
 SetSensorLowspeed(S4);
 //Ultraschallsensor
 
-offset = (SensorValue(S1) + SensorValue(S2))/2;
+offset = (((SensorValue(S1) + SensorValue(S2))/2) + Sensor(S3))/2;
 Wait(500);
 //rechnet offset aus,
 //vor dem starten ein Sensor über weis und einen über schwarz setzen
@@ -37,15 +37,14 @@ while(true){
             
             OnFwd(OUT_AC,50);
             Wait(1000);
-            OnFwd(OUT_A,60);
-            OnRev(OUT_C,30);
+            OnFwd(OUT_C,60);
+            OnRev(OUT_A,30);
             Wait(1700);
             //Dreht sich um 180° wenn S1, S2 und S3 auf weiß stehen
         }
-        else if (
-            Sensor(S1) > offset ||
-            Sensor(S2) > offset ||
-            Sensor(S3) > offset){
+        else if (Sensor(S1) <= offset ||
+                 Sensor(S2) <= offset ||
+                 Sensor(S3) <= offset){
             
             Off(OUT_AC);
             until(SensorUS(S4) > near);
@@ -67,29 +66,32 @@ while(true){
     lastError1 = error1;
     lastError2 = error2;
     
-    if(Sensor(S1) > offset && Sensor(S2) > offset){
-        OnRev(OUT_AC, Tp);
+    if(Sensor(S1) >= offset && Sensor(S2) >= offset){
+        OnRev(OUT_AC, 80);
         //fährt gerade aus wenn S1 und S2 auf weis stehen
     }
-    else if(Sensor(S1) < offset && Sensor(S1) < offset && Sensor(S1) < offset){
-        Off(OUT_AC);
+    //else if(Sensor(S1) < offset && Sensor(S2) < offset && Sensor(S3) < offset){
+        //Off(OUT_AC);
         //Hält an wenn alle Lichtsensoren auf schwarz.
         //Ballabladen wird aktiviert.
-    }
-    else if(Sensor(S1) < offset && Sensor(S2) < offset){
-        Off(OUT_C);
-        OnRev(OUT_A, powerC);
+    //}
+    //else if(Sensor(S1) <= offset && Sensor(S2) <= offset){
+        //OnRev(OUT_AC, 50);
+        //Wait(400);
+        //OnRev(OUT_C, 60);
+        //OnFwd(OUT_A, 30);
+        //Wait(850);
         //fährt nach rechts wenn S1 und S2 auf schwarz
-    }
+    //}
     else if(Sensor(S1) < offset){
         Off(OUT_A);
         OnRev(OUT_C, powerA);
-        //fährt nach links wenn S2 auf schwarz
+        //fährt nach links wenn S1 auf schwarz
     }
-    else if(Sensor(S1) < offset){
+    else if(Sensor(S2) < offset){
         Off(OUT_C);
         OnRev(OUT_A, powerC);
-        //fährt nach rechts wenn S1 auf schwarz
+        //fährt nach rechts wenn S2 auf schwarz
     }
 
 
