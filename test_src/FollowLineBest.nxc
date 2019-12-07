@@ -67,21 +67,26 @@ while(true){
     lastError1 = error1;
     lastError2 = error2;
     
-    if(powerA > 0 && powerC > 0){
+    if(Sensor(S1) > offset && Sensor(S2) > offset){
         OnRev(OUT_AC, Tp);
         //fährt gerade aus wenn S1 und S2 auf weis stehen
     }
-    else if(powerA <= 0 && powerC <= 0){
+    else if(Sensor(S1) < offset && Sensor(S1) < offset && Sensor(S1) < offset){
+        Off(OUT_AC);
+        //Hält an wenn alle Lichtsensoren auf schwarz.
+        //Ballabladen wird aktiviert.
+    }
+    else if(Sensor(S1) < offset && Sensor(S2) < offset){
         Off(OUT_C);
         OnRev(OUT_A, powerC);
         //fährt nach rechts wenn S1 und S2 auf schwarz
     }
-    else if(powerA <= 0){
+    else if(Sensor(S1) < offset){
         Off(OUT_A);
         OnRev(OUT_C, powerA);
         //fährt nach links wenn S2 auf schwarz
     }
-    else if(powerC <= 0){
+    else if(Sensor(S1) < offset){
         Off(OUT_C);
         OnRev(OUT_A, powerC);
         //fährt nach rechts wenn S1 auf schwarz
