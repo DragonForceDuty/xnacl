@@ -1,19 +1,12 @@
 
 task main(){
 int Kp = 930;
-int Ki = 0;
-int Kd = 0;
 int offset;
-int Tp = 75;
-int integral1 = 0;
-int integral2 = 0;
-int lastError1 = 0;
-int lastError2 = 0;
-int derivative1 = 0;
-int derivative2 = 0;
+int Tp = 35;  //Mit 35 funktioniert es
 int near_wall = 19;
 int near_gate = 5;
 int number = 0;
+
 SetSensorType(S1, SENSOR_TYPE_LIGHT_ACTIVE);
 SetSensorMode(S1, SENSOR_MODE_PERCENT);
 //Lichtsensor links
@@ -25,105 +18,105 @@ SetSensorMode(S3, SENSOR_MODE_PERCENT);
 //Lichtsensor mitte, für Barcode
 SetSensorLowspeed(S4);
 //Ultraschallsensor
-
-offset = (((SensorValue(S1) + SensorValue(S2))/2) + Sensor(S3))/2;
+int lastlinks = SensorValue(S1);
+int lastrechts = SensorValue(S2);
+int lastmitte = SensorValue(S3);
+offset = (((SensorValue(S1) + SensorValue(S2))/2) + SensorValue(S3))/2;
 Wait(500);
 //rechnet offset aus,
 //vor dem starten ein Sensor über weis und einen über schwarz setzen
 
 while(true){
+int rechts = SensorValue(S1);
+int links = SensorValue(S2);
+int mitte = SensorValue(S3);
     if(SensorUS(S4) <= near_wall){
     //Wenn der US eine Wand erkennt
-        if (((SensorValue(S1) > offset) &&
-            (SensorValue(S2) > offset) &&
-            (SensorValue(S3) > offset))){
+        if (links > offset &&
+            rechts > offset &&
+            mitte > offset){
             if (number == 0){
-                OnFwd(OUT_AC,50);
-                Wait(1000);
+                OnFwd(OUT_AC, 50);
+                Wait(200);
                 OnFwd(OUT_C,60);
                 OnRev(OUT_A,30);
-                Wait(1800);
+                Wait(2000);
                 number = 1;
             }
             //Dreht sich um 180° wenn S1, S2 und S3 auf weiß stehen
         }
-
+        else if (links < offset &&
+                 rechts < offset &&
+                 mitte < offset){
+                 Off(OUT_AC);
+                 }
         else{
             Off(OUT_AC);
             until(SensorUS(S4) > near_wall);
             //hält an wenn einer der Sensoren auf schwarz steht
         }
     }
-    int LightValue1 = SensorValue(S1);
-    int LightValue2 = SensorValue(S2);
+    int LightValue1 = rechts;
+    int LightValue2 = links;
     int error1 = LightValue1 - offset;
     int error2 = LightValue2 - offset;
-    integral1 =integral1 + error1;
-    integral2 =integral2 + error2;
-    derivative1 = error1 - lastError1;
-    derivative2 = error2 - lastError2;
-    int Turn1 = ((Kp * error1) + (Ki * integral1) + (Kd * derivative1)) / 100;
-    int Turn2 = ((Kp * error2) + (Ki * integral2) + (Kd * derivative2)) / 100;
+    int Turn1 = (Kp * error1) / 100;
+    int Turn2 = (Kp * error2) / 100;
     int powerA = ((Tp + Turn1)^2)^0.5;
     int powerC = (((Tp + Turn2)^2)^0.5);
-    lastError1 = error1;
-    lastError2 = error2;
-    
-    //if(SensorValue(S1) >= offset &&
-       //SensorValue(S2) >= offset &&
-       //SensorValue(S3) >= offset){
-        //OnFwd(OUT_C,60);
-        //OnRev(OUT_A,30);
-        //Wait(900);
+    if(rechts <= offset){
+        Off(OUT_AC);
+        OnRev(OUT_C, powerA);
+        if(links >= offset && mitte >= offset){
+            Off(OUT_AC);
+            OnRev(OUT_C, 100);
+            until (SensorValue(S3) <= offset);
+            TextOut(0,0, "1");
+        }
 
-        //if(SensorValue(S2) < offset){
-           // continue;
-           // }
-        //else{
-            //OnFwd(OUT_A,60);
-            //OnRev(OUT_C,30);
-            //Wait(1900);
-       // }
+    }
+    if(links <= offset){
+        Off(OUT_AC);
+        OnRev(OUT_A, powerC);
+        if(rechts >= offset && mitte >= offset){
+            Off(OUT_AC);
+            OnRev(OUT_A, 100);
+            until (SensorValue(S3) <= offset);
+            TextOut(0,0,"2");
+        }
 
-   // }
-    if(SensorValue(S1) >= offset && SensorValue(S2) >= offset && SensorValue(S3) < offset){
-        OnRev(OUT_AC, 60);
+    if (links >= offset && mitte >= offset && rechts >= offset){
+        TextOut(10,10,"5");
+        if (lastlinks <= offset){
+              Off(OUT_AC);
+              OnRev(OUT_A, 100);
+              Wait(500);
+              TextOut(1,1,"3");
+          }
+        else if (lastrechts <= offset){
+              Off(OUT_AC);
+              OnRev(OUT_C, 100);
+              Wait(500);
+              TextOut(2,2,"4");
+             }
+        else if (lastmitte <= offset){
+            Off(OUT_AC);
+            OnRev(OUT_AC, 75);
+            Wait(500);
+       }
+       }
+    }
+    if(links >= offset && rechts >= offset && mitte <= offset){
+        OnRev(OUT_AC, 75);  // Mit 65 hat es 80% funktioniert
+        TextOut(20,20,"10");
+
         //fährt gerade aus wenn S1 und S2 auf weis stehen
     }
-    //else if(SensorValue(S1) < offset &&
-              //SensorValue(S2) < offset &&
-              //SensorValue(S3) < offset){
-        //Off(OUT_AC);
-        //Hält an wenn alle Lichtsensoren auf schwarz.
-        //Ballabladen wird aktiviert.
-    //}
 
-
-
-
-
-    else if(SensorValue(S1) < offset){
-        Off(OUT_A);
-        OnRev(OUT_C, powerA);
-        if (SensorValue(S2) < offset){
-            OnFwd(OUT_C,30);
-            OnRev(OUT_A,60);
-            Wait(600);
-        }
-
-        //fährt nach links wenn S1 auf schwarz
-    }
-    else if(SensorValue(S2) < offset){
-        Off(OUT_C);
-        OnRev(OUT_A, powerC);
-        if (SensorValue(S1) < offset){
-            OnFwd(OUT_A,30);
-            OnRev(OUT_C,60);
-            Wait(600);
-        }
-
-        //fährt nach rechts wenn S2 auf schwarz
-    }
+    lastlinks = links;
+    lastrechts = rechts;
+    lastmitte = mitte;
+    
 }
 }
 
