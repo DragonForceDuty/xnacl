@@ -5,6 +5,8 @@ int Tp = 35;  //Mit 35 funktioniert es
 int near_wall = 19;
 int near_gate = 5;
 int number = 0;
+int lock1 = 0;
+int lock2 = 0;
 
 SetSensorType(S1, SENSOR_TYPE_LIGHT_ACTIVE);
 SetSensorMode(S1, SENSOR_MODE_PERCENT);
@@ -47,10 +49,31 @@ int mitte = SensorValue(S3);
         else if (links < offset &&
                  rechts < offset &&
                  mitte < offset){
-                 Off(OUT_AC);
+                     Off(OUT_AC);
+                 if(lock1 == 0){
+                     OnFwd(OUT_B,90);
+                     Wait(200);
+                     OnRev(OUT_B,30);
+                     Wait(800);
+                     Off(OUT_B);
+                     lock1 = 1;
+                     while(true){
+                     Wait(1000);
+                     }
+                     }
                  }
         else{
-            Off(OUT_AC);
+            if(lock2 == 0){
+                Off(OUT_AC);
+                OnFwd(OUT_B,20);
+                Wait(950);
+                Off(OUT_B);
+                Wait(1000);
+                OnRev(OUT_B,5);
+                Wait(600);
+                Off(OUT_B);
+                lock2 = 1;
+                }
             until(SensorUS(S4) > near_wall);
             //hält an wenn einer der Sensoren auf schwarz steht
         }
