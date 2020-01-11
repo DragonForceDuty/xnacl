@@ -1,4 +1,3 @@
-
 task main(){
 int Kp = 930;
 int offset;
@@ -116,7 +115,6 @@ int mitte = SensorValue(S3);
     lastlinks = links;
     lastrechts = rechts;
     lastmitte = mitte;
-    
-}
-}
 
+}
+}
