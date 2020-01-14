@@ -2,8 +2,9 @@ task main(){
 int Kp = 930;
 int offset;
 int Tp = 35;  //Mit 35 funktioniert es
-int near_wall = 19;
-int near_gate = 5;
+int near_wall = 21;
+int near_gate = 10;
+int near_brick = 5;
 int number = 0;
 int lock1 = 0;
 int lock2 = 0;
@@ -26,13 +27,49 @@ offset = (((SensorValue(S1) + SensorValue(S2))/2) + SensorValue(S3))/2;
 Wait(500);
 //rechnet offset aus,
 //vor dem starten ein Sensor über weis und einen über schwarz setzen
-
+int count1 = 0;
+int count2 = 0;
+int count3 = 0;
+int count = 0;
+int countz = 1;
 while(true){
-int rechts = SensorValue(S1);
-int links = SensorValue(S2);
-int mitte = SensorValue(S3);
+    int rechts = SensorValue(S1);
+    int links = SensorValue(S2);
+    int mitte = SensorValue(S3);
+    if(lastlinks > offset &&
+       lastrechts > offset &&
+       lastmitte < offset){
+        count = 5;
+    }
+    if(count > 0 && mitte > offset){
+        count1 = 5;
+    }
+    if(count1 > 0 && mitte < offset){
+        count2 = 5;
+    }
+    if(count2 > 0 && mitte > offset){
+        count3 = 5;
+    }
+    if(count3 > 0 && mitte < offset && countz = 1){
+        countz = 0;
+        OnRev(OUT_AC,50);
+        Wait(300);
+        OnFwd(OUT_C,60);
+        OnRev(OUT_A,40);
+        Wait(400);
+        until(mitte < offset);
+    }
     if(SensorUS(S4) <= near_wall){
     //Wenn der US eine Wand erkennt
+        if(SensorUS(S4) <= near_brick && countz = 0){
+            OnRev(OUT_AC,80);
+            until(Sensor(S4) > near_brick);
+            OnFwd(OUT_AC, 50);
+            Wait(200);
+            OnFwd(OUT_C,60);
+            OnRev(OUT_A,30);
+            Wait(2000);
+        }
         if (links > offset &&
             rechts > offset &&
             mitte > offset){
@@ -62,9 +99,14 @@ int mitte = SensorValue(S3);
                      }
                      }
                  }
-        else{
+        else if(links > offset &&
+                 rechts > offset &&
+                 mitte < offset &&
+                 SensorUS(S4) < near_gate &&
+                 SensorUS(S4) > near_brick &&
+                 countz = 1){
+            Off(OUT_AC);
             if(lock2 == 0){
-                Off(OUT_AC);
                 OnFwd(OUT_B,20);
                 Wait(950);
                 Off(OUT_B);
@@ -74,7 +116,7 @@ int mitte = SensorValue(S3);
                 Off(OUT_B);
                 lock2 = 1;
                 }
-            until(SensorUS(S4) > near_wall);
+            until(SensorUS(S4) > near_gate);
             //hält an wenn einer der Sensoren auf schwarz steht
         }
     }
@@ -138,6 +180,9 @@ int mitte = SensorValue(S3);
     lastlinks = links;
     lastrechts = rechts;
     lastmitte = mitte;
-
+    count = count - 1;
+    count1 = count1 - 1;
+    count2 = count2 - 1;
+    count3 = count3 - 1;
 }
 }
