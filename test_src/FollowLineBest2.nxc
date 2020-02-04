@@ -66,18 +66,10 @@ while(true){
     }
     if(SensorUS(S4) <= near_wall){
     //Wenn der US eine Wand erkennt
-        if(SensorUS(S4) <= near_brick && countz == 0){
+        while(countz == 0){
             TextOut(10,10,"Schwanz");
-            
-            while(SensorUS(S4) <= near_brick){
-                OnRev(OUT_AC, 50);
-                Wait(50);
-                TextOut(20,20,"Schleife");
-                until(SensorUS(S4) > near_wall);
-
-            }
-            if(SensorUS(S4) > near_wall){
-                Wait(100);
+            OnRev(OUT_AC, 50);
+            if (SensorUS(S4) > near_gate){
                 TextOut(1,1,"BEFORE_TURN");
                 OnFwd(OUT_AC, 50);
                 Wait(1500);
@@ -86,8 +78,8 @@ while(true){
                 Wait(1000);
                 countz = 1;
                 }
-        }
-        else if (links > offset &&
+                }
+        if (links > offset &&
                  rechts > offset &&
                  mitte > offset &&
                  number == 0){
@@ -104,7 +96,7 @@ while(true){
                  mitte < offset){
                      Off(OUT_AC);
                  if(lock1 == 0 && lock2 == 1){
-                     OnFwd(OUT_B,90);
+                     OnFwd(OUT_B,85);
                      Wait(200);
                      OnRev(OUT_B,30);
                      Wait(800);
@@ -188,7 +180,7 @@ while(true){
        }
     }
     if(links >= offset && rechts >= offset && mitte <= offset){
-        OnRev(OUT_AC, 100);  // Mit 65 hat es 80% funktioniert
+        OnRev(OUT_AC, 75);  // Mit 65 hat es 80% funktioniert
         TextOut(20,20,"10");
 
         //fährt gerade aus wenn S1 und S2 auf weis stehen
