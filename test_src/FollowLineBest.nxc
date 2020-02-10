@@ -12,30 +12,41 @@ int lock2 = 0;
 SetSensorType(S1, SENSOR_TYPE_LIGHT_ACTIVE);
 SetSensorMode(S1, SENSOR_MODE_PERCENT);
 //Lichtsensor links
+
 SetSensorType(S2, SENSOR_TYPE_LIGHT_ACTIVE);
 SetSensorMode(S2, SENSOR_MODE_PERCENT);
 //Lichtsensor rechts
+
 SetSensorType(S3, SENSOR_TYPE_LIGHT_ACTIVE);
 SetSensorMode(S3, SENSOR_MODE_PERCENT);
 //Lichtsensor mitte, für Barcode
+
 SetSensorLowspeed(S4);
 //Ultraschallsensor
+
 int lastlinks = SensorValue(S1);
 int lastrechts = SensorValue(S2);
 int lastmitte = SensorValue(S3);
+
 offset = (((SensorValue(S1) + SensorValue(S2))/2) + SensorValue(S3))/2;
 Wait(500);
 //rechnet offset aus,
 //vor dem starten ein Sensor über weis und einen über schwarz setzen
+
 int count1 = 0;
 int count2 = 0;
 int count3 = 0;
 int count = 0;
 int countz = 1;
+//Variablen für die Barcodeerkennung
+
 while(true){
     int rechts = SensorValue(S1);
     int links = SensorValue(S2);
     int mitte = SensorValue(S3);
+    
+//hier wird der Barcode erkannt, in dem überprüft wird,
+//ob der mittlere Lichtsensor schnell zwischen weis und schwarz wechselt
     if(links > offset &&
        rechts > offset &&
        mitte < offset){
@@ -57,6 +68,9 @@ while(true){
        links > offset && rechts > offset &&
        countz == 1){
         countz = 0;
+//der Roboter hat den Barcode erkannt, und macht eine Drehung nach rechts
+//alle anderen Wanderkennungsbedingungen werden gespert, bzw nur die
+//Klotzschiebebedingung wird ausgeführt
         OnFwd(OUT_AC,50);
         Wait(500);
         OnFwd(OUT_C,60);
@@ -64,12 +78,18 @@ while(true){
         Wait(300);
         until(mitte < offset);
     }
+    
     if(SensorUS(S4) <= near_wall){
-    //Wenn der US eine Wand erkennt
+//Der Ultraschallsensor erkennt eine Wand im Abstand von near_wall
+    
         if(SensorUS(S4) <= near_brick && countz == 0){
+//wird ausgeführt wenn der Roboter über den Barcode gefahren ist und eine
+//Wand im Abstand von near_brick erkennt
             TextOut(10,10,"Schwanz");
             
             while(SensorUS(S4) <= near_brick){
+//wenn der Roboter näher als near_brick am Klotz ist, fährt er so lange
+//vorwärts, bis der Abstand zum Klotz größer als near_wall ist
                 OnRev(OUT_AC, 50);
                 Wait(50);
                 TextOut(20,20,"Schleife");
@@ -77,6 +97,9 @@ while(true){
 
             }
             if(SensorUS(S4) > near_wall){
+//Wird ausgeführt, sobalt der Klotz weggeschoben wurde
+//Er fährt rückwärts und mach eine Drehung nach links um auf die
+//normale Strecke zu kommen
                 Wait(100);
                 TextOut(1,1,"BEFORE_TURN");
                 OnFwd(OUT_AC, 50);
@@ -84,26 +107,37 @@ while(true){
                 OnFwd(OUT_A,60);
                 OnRev(OUT_C,30);
                 Wait(1000);
-                countz = 1;
+                countz = 1;     //Die anderen Wandfunktionen
+                                //können wieder ausgeführt werden
                 }
         }
         else if (links > offset &&
                  rechts > offset &&
                  mitte > offset &&
                  number == 0){
+//Wird ausgeführt wenn Us <= near_wall und Lichtsensoren auf
+//weis weis weis stehen
+//Die 180° Drehung am Anfang
+        
                      OnFwd(OUT_AC, 50);
                      Wait(200);
                      OnFwd(OUT_C,60);
                      OnRev(OUT_A,30);
                      Wait(2000);
-                     number = 1;
-            //Dreht sich um 180° wenn S1, S2 und S3 auf weiß stehen
+                     number = 1; //Wird einmal ausgeführt und dann gesperrt
+
         }
         else if (links < offset &&
                  rechts < offset &&
                  mitte < offset){
-                     Off(OUT_AC);
+//Wird ausgeführt wenn Us <= near_wall und Lichtsensoren auf
+//schwarz schwarz schwarz stehen
+                     Off(OUT_AC); //und hält an
+                     
                  if(lock1 == 0 && lock2 == 1){
+//Falls Der Roboter bereits die Schranke passiert hat,
+//wirft er bei den obigen Bedingungen den Ball in den Korb
+//Ab Ende der Strecke
                      OnFwd(OUT_B,90);
                      Wait(200);
                      OnRev(OUT_B,30);
@@ -111,6 +145,7 @@ while(true){
                      Off(OUT_B);
                      lock1 = 1;
                      while(true){
+//Schaltet sich aus
                      Wait(1000);
                      }
                      }
@@ -120,10 +155,14 @@ while(true){
                  mitte < offset &&
                  SensorUS(S4) <= near_gate &&
                  countz == 1){
+//Wird ausgeführt wenn Us <= near_wall und Lichtsensoren auf
+//weis schwarz weis stehen und kein Barcode erkannt wurde
+//Die Schranke
             OnRev(OUT_AC,30);
             Wait(200);
             Off(OUT_AC);
             if(lock2 == 0){
+//Der Greifarm fährt nach oben und fängt den Ball auf
                 OnFwd(OUT_B,20);
                 Wait(950);
                 Off(OUT_B);
@@ -131,12 +170,15 @@ while(true){
                 OnRev(OUT_B,5);
                 Wait(600);
                 Off(OUT_B);
-                lock2 = 1;
+                lock2 = 1;   //Wird einmal ausgeführt und dann gesperrt
                 }
             until(SensorUS(S4) > near_gate);
-            //hält an wenn einer der Sensoren auf schwarz steht
+//hält an bis die Schranke geöffnet wird
         }
     }
+    
+    
+    //Die Berechnung des P-Controlers
     int LightValue1 = rechts;
     int LightValue2 = links;
     int error1 = LightValue1 - offset;
@@ -145,28 +187,57 @@ while(true){
     int Turn2 = (Kp * error2) / 100;
     int powerA = ((Tp + Turn1)^2)^0.5;
     int powerC = (((Tp + Turn2)^2)^0.5);
+    
+//ab hier beginnen die Korekturen während der Fahrt
+    
     if(rechts <= offset){
+//wird ausgeführt wenn der rechte Lichtsensor auf schwarz steht
+//und keine Wand erkannt wird
         Off(OUT_AC);
         OnRev(OUT_C, powerA);
+//es wird nach rechts korrigiert
+        
         if(links >= offset && mitte >= offset){
+//wird ausgeführt wenn der rechte Lichtsensor auf schwarz steht
+//und keine Wand erkannt wird und die anderen auf weis stehen
+//Wenn der Roboter stark ausgebrochen ist
+    
             Off(OUT_AC);
             OnRev(OUT_C, 100);
             until (SensorValue(S3) <= offset);
             TextOut(0,0, "1");
+//es wird stark nach rechts korrigiert
         }
-
     }
     if(links <= offset){
+//wird ausgeführt wenn der linke Lichtsensor auf schwarz steht
+//und keine Wand erkannt wird
         Off(OUT_AC);
         OnRev(OUT_A, powerC);
+//es wird nach links korrigiert
+        
         if(rechts >= offset && mitte >= offset){
+//wird ausgeführt wenn der rechte Lichtsensor auf schwarz steht
+//und keine Wand erkannt wird und die anderen auf weis stehen
+//Wenn der Roboter stark ausgebrochen ist
+
             Off(OUT_AC);
             OnRev(OUT_A, 100);
             until (SensorValue(S3) <= offset);
             TextOut(0,0,"2");
+//es wird stark nach links korrigiert
         }
 
     if (links >= offset && mitte >= offset && rechts >= offset){
+//wird ausgeführt wenn die Lichtsensoren auf weis weis weis stehen
+//und keine Wand erkannt wird
+//Korrigiert je nachdem Welcher Sensor zuletzt schwarz war und korrigiert
+//in die entsprechende Richtung
+//Fraglich obe es wie gewollt funktioniert
+
+//Es sollte ein Timer eingebaut werden damit er besser über die
+//Löcher fahren kann
+
         TextOut(10,10,"5");
         if (lastlinks <= offset){
               Off(OUT_AC);
@@ -188,15 +259,18 @@ while(true){
        }
     }
     if(links >= offset && rechts >= offset && mitte <= offset){
-        OnRev(OUT_AC, 100);  // Mit 65 hat es 80% funktioniert
+//wird ausgeführt wenn die Lichtsensoren auf weis schwarz weis stehen
+//und keine Wand erkannt wird
+        OnRev(OUT_AC, 100);
+//Die normale Geschwindigkeit wenn der Roboter nicht korrigieren muss
         TextOut(20,20,"10");
-
-        //fährt gerade aus wenn S1 und S2 auf weis stehen
     }
 
     lastlinks = links;
     lastrechts = rechts;
     lastmitte = mitte;
+    
+//Zählt die Variablen vor die Barcode erkennung runter
     count = count - 1;
     count1 = count1 - 1;
     count2 = count2 - 1;
