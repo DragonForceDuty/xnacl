@@ -1,0 +1,205 @@
+task main(){
+int Kp = 1400;
+int offset;
+int Tp = 35;
+int near_wall = 21;
+int near_gate = 12;
+int near_brick = 7;
+int number = 0;
+int lock1 = 0;
+int lock2 = 0;
+
+SetSensorType(S1, SENSOR_TYPE_LIGHT_ACTIVE);
+SetSensorMode(S1, SENSOR_MODE_PERCENT);
+//Lichtsensor links
+SetSensorType(S2, SENSOR_TYPE_LIGHT_ACTIVE);
+SetSensorMode(S2, SENSOR_MODE_PERCENT);
+//Lichtsensor rechts
+SetSensorType(S3, SENSOR_TYPE_LIGHT_ACTIVE);
+SetSensorMode(S3, SENSOR_MODE_PERCENT);
+//Lichtsensor mitte, für Barcode
+SetSensorLowspeed(S4);
+//Ultraschallsensor
+int lastlinks = SensorValue(S1);
+int lastrechts = SensorValue(S2);
+int lastmitte = SensorValue(S3);
+int lastS4 = 0;
+offset = (((SensorValue(S1) + SensorValue(S2))/2) + SensorValue(S3))/2;
+Wait(500);
+//rechnet offset aus,
+//vor dem starten ein Sensor über weis und einen über schwarz setzen
+int count1 = 0;
+int count2 = 0;
+int count3 = 0;
+int count = 0;
+int countz = 1;
+while(true){
+    int rechts = SensorValue(S1);
+    int links = SensorValue(S2);
+    int mitte = SensorValue(S3);
+    if(mitte < offset){
+        count = 8;
+    }
+    if(count > 0 && links > offset &&
+       rechts > offset && mitte > offset){
+        count1 = 8;
+    }
+    if(count1 > 0 && mitte < offset){
+        count2 = 8;
+    }
+    if(count2 > 0 && links > offset &&
+       rechts > offset && mitte > offset){
+        count3 = 8;
+    }
+    if(count3 > 0 && mitte < offset && countz == 1){
+        countz = 0;
+        OnRev(OUT_AC, 60);
+        Wait(250);
+        OnRev(OUT_A, 60);
+        OnFwd(OUT_C, 30);
+        Wait(330);
+        until(SensorUS(S4) < offset);
+    }
+    if(SensorUS(S4) <= near_wall){
+    //Wenn der US eine Wand erkennt
+        if(SensorUS(S4) <= near_brick && countz == 0){
+            TextOut(10,10,"Schwanz");
+            while(SensorUS(S4) <= near_brick || (SensorUS(S4) - lastS4) < 50){
+                OnRev(OUT_AC, 80);
+                TextOut(20,20,"Schleife");
+                }
+            Wait(100);
+            TextOut(1,1,"BEFORE_TURN");
+            OnFwd(OUT_AC, 50);
+            Wait(1500);
+            OnFwd(OUT_A,60);
+            OnRev(OUT_C,30);
+            Wait(1000);
+            countz = 1;
+        }
+        else if (links > offset &&
+                 rechts > offset &&
+                 mitte > offset &&
+                 number == 0){
+                     OnFwd(OUT_AC, 50);
+                     Wait(200);
+                     OnFwd(OUT_C,60);
+                     OnRev(OUT_A,30);
+                     Wait(2000);
+                     number = 1;
+            //Dreht sich um 180° wenn S1, S2 und S3 auf weiß stehen
+        }
+        else if (links < offset &&
+                 rechts < offset &&
+                 mitte < offset){
+                     Off(OUT_AC);
+                 if(lock1 == 0 && lock2 == 1){
+                     OnFwd(OUT_B,80);
+                     Wait(200);
+                     OnRev(OUT_B,30);
+                     Wait(800);
+                     Off(OUT_B);
+                     lock1 = 1;
+                     while(true){
+                     Wait(1000);
+                     }
+                     }
+                 }
+        else if(links > offset &&
+                 rechts > offset &&
+                 mitte < offset &&
+                 SensorUS(S4) <= near_gate &&
+                 countz == 1){
+            OnRev(OUT_AC,30);
+            Wait(100);
+            Off(OUT_AC);
+            if(lock2 == 0){
+                OnFwd(OUT_B,20);
+                Wait(950);
+                Off(OUT_B);
+                Wait(1000);
+                OnRev(OUT_B,5);
+                Wait(600);
+                Off(OUT_B);
+                lock2 = 1;
+                }
+            until(SensorUS(S4) > near_gate);
+            //hält an wenn einer der Sensoren auf schwarz steht
+        }
+    }
+    int LightValue1 = rechts;
+    int LightValue2 = links;
+    int error1 = LightValue1 - offset;
+    int error2 = LightValue2 - offset;
+    int Turn1 = (Kp * error1) / 100;
+    int Turn2 = (Kp * error2) / 100;
+    int powerA = ((Tp + Turn1)^2)^0.5;
+    int powerC = (((Tp + Turn2)^2)^0.5);
+    if(rechts <= offset){
+        Off(OUT_AC);
+        OnRev(OUT_C, powerA);
+        if(links >= offset && mitte >= offset){
+            Off(OUT_AC);
+            OnRev(OUT_C, 80);
+            until (SensorValue(S3) <= offset);
+            TextOut(0,0, "1");
+        }
+
+    }
+    if(links <= offset){
+        Off(OUT_AC);
+        OnRev(OUT_A, powerC);
+        if(rechts >= offset && mitte >= offset){
+            Off(OUT_AC);
+            OnRev(OUT_A, 80);
+            until (SensorValue(S3) <= offset);
+            TextOut(0,0,"2");
+        }
+
+    if (links >= offset && mitte >= offset && rechts >= offset){
+        TextOut(10,10,"5");
+        if (lastlinks <= offset){
+              Off(OUT_AC);
+              OnRev(OUT_A, 80);
+              Wait(500);
+              TextOut(1,1,"3");
+          }
+        else if (lastrechts <= offset){
+              Off(OUT_AC);
+              OnRev(OUT_C, 80);
+              Wait(500);
+              TextOut(2,2,"4");
+             }
+        else if (lastmitte <= offset){
+            Off(OUT_AC);
+            OnRev(OUT_AC, 75);
+            Wait(500);
+       }
+       }
+    }
+    if(links >= offset && rechts >= offset && mitte <= offset){
+        OnRev(OUT_AC, 80);  // Mit 65 hat es 80% funktioniert
+        TextOut(20,20,"10");
+
+        //fährt gerade aus wenn S1 und S2 auf weis stehen
+    }
+    lastS4 = SensorUS(S4);
+    lastlinks = links;
+    lastrechts = rechts;
+    lastmitte = mitte;
+    NumOut(0,32,rechts);
+    TextOut(24,32,"Rechts");
+    NumOut(0,24,links);
+    TextOut(24,24, "Links");
+    NumOut(0,16,mitte);
+    TextOut(24,16,"Mitte");
+    NumOut(0,8,SensorUS(S4));
+    TextOut(24,8,"Wand");
+    NumOut(0,40,offset);
+    TextOut(24,40,"Offset");
+    count = count - 1;
+    count1 = count1 - 1;
+    count2 = count2 - 1;
+    count3 = count3 - 1;
+}
+}
